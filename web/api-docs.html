@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProxyPool API 文档</title>
+<style>
+  :root {
+    --bg: #0f1419; --panel: #1a2029; --border: #2a3644; --text: #d7e0ea;
+    --muted: #8b98a8; --accent: #4da3ff; --green: #31c48d; --amber: #f0b429;
+    --red: #f05252; --chip: #243040;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 80px; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  header h1 { font-size: 20px; margin: 0; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  .spacer { flex: 1; }
+  a.btn { background: var(--panel); color: var(--text); border: 1px solid var(--border);
+          border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 13px; text-decoration: none; }
+  a.btn:hover { border-color: var(--accent); }
+  .base { background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+          padding: 10px 14px; margin: 14px 0 22px; font-size: 13px; }
+  .base code { color: var(--green); font-family: ui-monospace, Menlo, monospace; }
+  .ep { background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+        margin-bottom: 18px; overflow: hidden; }
+  .ep-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .method { font-weight: 700; font-size: 12px; border-radius: 6px; padding: 3px 9px; min-width: 52px; text-align: center; }
+  .method.get { background: #173a2a; color: var(--green); }
+  .method.post { background: #3a2f17; color: var(--amber); }
+  .method.del { background: #3a1d1d; color: var(--red); }
+  .path { font-family: ui-monospace, Menlo, monospace; font-size: 15px; font-weight: 600; }
+  .ep-desc { color: var(--muted); margin-left: auto; font-size: 12px; text-align: right; }
+  .ep-body { padding: 12px 16px 16px; }
+  .ep-body > p { margin: 0 0 10px; color: var(--muted); }
+  h3 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin: 16px 0 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; }
+  td code, .mono { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; }
+  .tag { display: inline-block; background: var(--chip); border-radius: 5px; padding: 0 6px; font-size: 11px; color: var(--muted); }
+  .tag.req { color: var(--red); }
+  .tag.opt { color: var(--amber); }
+  pre { position: relative; background: #0b1117; border: 1px solid var(--border); border-radius: 8px;
+        padding: 12px 14px; overflow: auto; font-size: 12.5px; line-height: 1.5; margin: 0; }
+  pre code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+  .copy-btn { position: absolute; top: 8px; right: 8px; background: var(--panel);
+        border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px;
+        color: var(--muted); font-size: 12px; cursor: pointer; }
+  .copy-btn:hover { border-color: var(--accent); color: var(--text); }
+  .copy-btn.ok { color: var(--green); border-color: var(--green); }
+  .note { background: #1c2430; border-left: 3px solid var(--accent); border-radius: 6px;
+          padding: 8px 12px; font-size: 12.5px; color: #9fb0c3; margin: 10px 0; }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 18px; }
+  .toc a { color: var(--accent); text-decoration: none; background: var(--panel);
+           border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; }
+  .toc a:hover { border-color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ProxyPool API 文档</h1>
+    <span class="sub">接口 · 参数 · 调用样例</span>
+    <span class="spacer"></span>
+    <a class="btn" href="/dashboard">返回面板</a>
+  </header>
+
+  <div class="base">基础地址：<code>http://192.168.0.9:5010</code>　（所有接口均为 GET，返回 JSON）</div>
+
+  <div class="toc">
+    <a href="#get">/get</a>
+    <a href="#pop">/pop</a>
+    <a href="#delete">/delete</a>
+    <a href="#all">/all</a>
+    <a href="#count">/count</a>
+    <a href="#stats">/stats</a>
+    <a href="#dashboard">/dashboard</a>
+    <a href="#index">/</a>
+  </div>
+
+  <!-- /get -->
+  <div class="ep" id="get">
+    <div class="ep-head"><span class="method get">GET</span><span class="path">/get</span><span class="ep-desc">随机返回一个可用代理</span></div>
+    <div class="ep-body">
+      <table>
+        <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>type</code></td><td>string</td><td><span class="tag opt">可选</span></td><td>协议过滤：<code>http</code> / <code>https</code> / <code>socks4</code> / <code>socks5</code></td></tr>
+          <tr><td><code>region</code></td><td>string</td><td><span class="tag opt">可选</span></td><td>地域过滤：国家码（如 <code>CN</code>、<code>US</code>、<code>HK</code>），大小写不敏感</td></tr>
+          <tr><td><code>check</code></td><td>string</td><td><span class="tag opt">可选</span></td><td><code>1</code> 表示现场拨测通过才返回（最多试 6 个，失败即剔除）</td></tr>
+        </tbody>
+      </table>
+      <div class="note"><code>type=https</code> 表示「http 协议且支持 https 的代理」——返回结果的 <code>proto</code> 字段是 <code>http</code>（代理协议不存在 <code>https</code> 这个值），靠 <code>https: true</code> 标志表示支持 https，且不含 socks5/socks4（即使其 <code>https</code> 字段为 true）。</div>
+      <h3>调用样例</h3>
+      <pre><code># 随机获取一个 http 代理
+curl "http://192.168.0.9:5010/get/?type=http"
+
+# 获取一个 CN 地域的 https 代理
+curl "http://192.168.0.9:5010/get/?type=https&amp;region=CN"
+
+# 现场拨测通过才返回（socks5）
+curl "http://192.168.0.9:5010/get/?type=socks5&amp;check=1"</code></pre>
+      <h3>响应样例</h3>
+      <pre><code>{
+  "proxy": "61.155.100.100:3128",
+  "https": true,
+  "proto": "http",
+  "fail_count": 0,
+  "region": "CN",
+  "anonymous": "",
+  "source": "monosans",
+  "check_count": 3,
+  "last_status": true,
+  "last_time": "2026-09-24 12:00:00"
+}</code></pre>
+      <div class="note">无可用代理时返回 <code>{"code": 0, "src": "no proxy"}</code>；拨测无可用时返回 <code>{"code": 0, "src": "no usable proxy after live check", "tried": 6}</code>。</div>
+    </div>
+  </div>
+
+  <!-- /pop -->
+  <div class="ep" id="pop">
+    <div class="ep-head"><span class="method get">GET</span><span class="path">/pop</span><span class="ep-desc">获取并删除一个代理</span></div>
+    <div class="ep-body">
+      <table>
+        <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>type</code></td><td>string</td><td><span class="tag opt">可选</span></td><td>协议过滤：<code>http</code> / <code>https</code> / <code>socks4</code> / <code>socks5</code></td></tr>
+        </tbody>
+      </table>
+      <h3>调用样例</h3>
+      <pre><code>curl "http://192.168.0.9:5010/pop/"</code></pre>
+      <h3>响应样例</h3>
+      <pre><code>{
+  "proxy": "61.155.100.100:3128",
+  "https": true,
+  "proto": "http",
+  ...
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- /delete -->
+  <div class="ep" id="delete">
+    <div class="ep-head"><span class="method del">GET</span><span class="path">/delete</span><span class="ep-desc">删除指定代理</span></div>
+    <div class="ep-body">
+      <table>
+        <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>proxy</code></td><td>string</td><td><span class="tag req">必填</span></td><td>代理地址，形如 <code>127.0.0.1:8080</code></td></tr>
+        </tbody>
+      </table>
+      <h3>调用样例</h3>
+      <pre><code>curl "http://192.168.0.9:5010/delete/?proxy=127.0.0.1:8080"</code></pre>
+      <h3>响应样例</h3>
+      <pre><code>{"code": 0, "src": 1}</code></pre>
+      <div class="note">末尾斜杠为标准写法（Flask <code>strict_slashes</code> 下直接命中）；省略斜杠会 308 重定向到带斜杠地址，功能等价。</div>
+    </div>
+  </div>
+
+  <!-- /all -->
+  <div class="ep" id="all">
+    <div class="ep-head"><span class="method get">GET</span><span class="path">/all</span><span class="ep-desc">返回池中全部代理（数组）</span></div>
+    <div class="ep-body">
+      <table>
+        <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>type</code></td><td>string</td><td><span class="tag opt">可选</span></td><td>协议过滤：<code>http</code> / <code>https</code> / <code>socks4</code> / <code>socks5</code></td></tr>
+        </tbody>
+      </table>
+      <h3>调用样例</h3>
+      <pre><code>curl "http://192.168.0.9:5010/all/"</code></pre>
+      <h3>响应样例</h3>
+      <pre><code>[
+  {"proxy": "61.155.100.100:3128", "https": true, "proto": "http", ...},
+  {"proxy": "203.0.113.5:1080", "https": false, "proto": "socks5", ...}
+]</code></pre>
+    </div>
+  </div>
+
+  <!-- /count -->
+  <div class="ep" id="count">
+    <div class="ep-head"><span class="method get">GET</span><span class="path">/count</span><span class="ep-desc">代理数量统计</span></div>
+    <div class="ep-body">
+      <h3>调用样例</h3>
+      <pre><code>curl "http://192.168.0.9:5010/count/"</code></pre>
+      <h3>响应样例</h3>
+      <pre><code>{
+  "http_type": {"http": 203, "https": 85},
+  "source": {"monosans": 150, "proxifly": 80, ...},
+  "count": 288
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- /stats -->
+  <div class="ep" id="stats">
+    <div class="ep-head"><span class="method get">GET</span><span class="path">/stats</span><span class="ep-desc">聚合统计（面板数据源）</span></div>
+    <div class="ep-body">
+      <table>
+        <thead><tr><th>字段</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>total</code></td><td>代理总数</td></tr>
+          <tr><td><code>https</code></td><td>支持 https 的代理数</td></tr>
+          <tr><td><code>by_proto</code></td><td>按协议分布（http/socks4/socks5/multi）</td></tr>
+          <tr><td><code>by_source</code></td><td>按来源分布（降序数组 <code>[名称, 数量]</code>）</td></tr>
+          <tr><td><code>by_region</code></td><td>按地域分布（降序数组 <code>[国家码, 数量]</code>，未知归「未知」）</td></tr>
+          <tr><td><code>recent</code></td><td>最近代理（前 20，完整字段）</td></tr>
+          <tr><td><code>fetch_log</code></td><td>采集日志尾部 60 行</td></tr>
+          <tr><td><code>check_log</code></td><td>校验日志尾部 60 行</td></tr>
+        </tbody>
+      </table>
+      <h3>调用样例</h3>
+      <pre><code>curl "http://192.168.0.9:5010/stats"</code></pre>
+      <h3>响应样例</h3>
+      <pre><code>{
+  "total": 288,
+  "https": 85,
+  "by_proto": {"http": 200, "socks5": 60, "socks4": 28},
+  "by_source": [["monosans", 150], ["proxifly", 80]],
+  "by_region": [["未知", 786], ["CN", 150], ["US", 40]],
+  "recent": [ ... ],
+  "fetch_log": ["..."],
+  "check_log": ["..."]
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- /dashboard -->
+  <div class="ep" id="dashboard">
+    <div class="ep-head"><span class="method get">GET</span><span class="path">/dashboard</span><span class="ep-desc">图形化代理面板（HTML）</span></div>
+    <div class="ep-body">
+      <h3>调用样例</h3>
+      <pre><code># 浏览器直接访问
+http://192.168.0.9:5010/dashboard</code></pre>
+    </div>
+  </div>
+
+  <!-- / -->
+  <div class="ep" id="index">
+    <div class="ep-head"><span class="method get">GET</span><span class="path">/</span><span class="ep-desc">接口索引（JSON）</span></div>
+    <div class="ep-body">
+      <h3>调用样例</h3>
+      <pre><code>curl "http://192.168.0.9:5010/"</code></pre>
+      <h3>响应样例</h3>
+      <pre><code>{
+  "url": [
+    {"url": "/get", "params": "...", "desc": "get a proxy"},
+    {"url": "/pop", "params": "", "desc": "get and delete a proxy"},
+    ...
+  ]
+}</code></pre>
+    </div>
+  </div>
+
+</div>
+<script>
+(function(){
+  function finish(btn){
+    btn.textContent = '已复制'; btn.classList.add('ok');
+    setTimeout(function(){ btn.textContent = '复制'; btn.classList.remove('ok'); }, 1500);
+  }
+  function legacyCopy(text, btn){
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); finish(btn); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  function copy(text, btn){
+    // 页面走 LAN HTTP（非安全上下文），clipboard API 通常不可用，走 execCommand 兜底
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){ finish(btn); },
+        function(){ legacyCopy(text, btn); });
+    } else {
+      legacyCopy(text, btn);
+    }
+  }
+  document.querySelectorAll('h3').forEach(function(h){
+    if (h.textContent.trim() !== '调用样例') return;
+    var pre = h.nextElementSibling;
+    while (pre && pre.tagName !== 'PRE') pre = pre.nextElementSibling;
+    if (!pre) return;
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'copy-btn'; btn.textContent = '复制';
+    btn.addEventListener('click', function(){
+      copy(pre.querySelector('code').textContent.trim(), btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+</script>
+</body>
+</html>
